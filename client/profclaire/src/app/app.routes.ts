@@ -3,6 +3,6 @@ import { LoginRegister } from './login-register/login-register';
 
 export const routes: Routes = [
 
-    { path: 'login', component: LoginRegister },
+    { path: '', component: LoginRegister },
 
 ];

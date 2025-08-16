@@ -16,11 +16,12 @@ app = FastAPI()
 # Middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # <- ça devrait autoriser toutes les origines
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
 
 create_tables()  # Tables à l'initialisation
 
@@ -45,6 +46,7 @@ def verify_jwt(token: str):
 @app.post("/api/register")
 async def register_user(request: Request):
     data = await request.json()
+    print("Register payload:", data)
     username = data.get("username")
     password = data.get("password")
     last_name = data.get("last_name")
@@ -63,22 +65,27 @@ async def register_user(request: Request):
 
 @app.post("/api/login")
 async def login_user(request: Request):
-    data = await request.json()
-    username = data.get("username")
-    password = data.get("password")
+    try:
+        data = await request.json()
+        username = data.get("username")
+        password = data.get("password")
 
-    user = connect_user(username, password)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        user = connect_user(username, password)
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_jwt(user["id"], timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    refresh_token = create_jwt(user["id"], timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+        access_token = create_jwt(user["id"], timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        refresh_token = create_jwt(user["id"], timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
-    return JSONResponse(content={
-        "user": user,
-        "access_token": access_token,
-        "refresh_token": refresh_token
-    })
+        return JSONResponse(content={
+            "user": user,
+            "access_token": access_token,
+            "refresh_token": refresh_token
+        })
+    except Exception as e:
+        print("ERROR LOGIN:", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 # --- Auth dependency ---

@@ -13,14 +13,23 @@ def create_tables():
 def connect_user(username, password):
     db = SqliteDatabase('ma_base.db')
     db.connect()
-    password = hash_some_string(password) 
     try:
-        user = Proffesseurs_Users.get(Proffesseurs_Users.username == username, Proffesseurs_Users.password == password)
-        return {"id": user.id, "nom": user.nom, "email": user.email}
+        user = Proffesseurs_Users.get(Proffesseurs_Users.username == username)
+        if user.password == hash_some_string(password):
+            return {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "is_admin": user.is_admin
+            }
+        return None
     except Proffesseurs_Users.DoesNotExist:
         return None
     finally:
         db.close()
+
 
 def hash_some_string(string):
     """Hash a string using SHA-256."""
@@ -30,9 +39,12 @@ def hash_some_string(string):
 def create_user(username, password, last_name, first_name, email, is_admin=False):
     db = SqliteDatabase('ma_base.db')
     db.connect()
-    #hash password
     password = hash_some_string(password)
     try:
+        # Vérifier si l'utilisateur existe déjà
+        if Proffesseurs_Users.select().where((Proffesseurs_Users.username == username) | (Proffesseurs_Users.email == email)).exists():
+            return {"error": "User or email already exists"}
+
         user = Proffesseurs_Users.create(
             username=username,
             password=password,
@@ -41,11 +53,12 @@ def create_user(username, password, last_name, first_name, email, is_admin=False
             last_name=last_name,
             is_admin=is_admin
         )
-        return {"id": user.id, "nom": user.nom, "email": user.email}
-    except IntegrityError:
-        return None
+        return {"id": user.id, "nom": user.last_name, "email": user.email} # Retourne un JSON
+    except Exception as e:
+        return {"error": str(e)}
     finally:
         db.close()
+
 
 
 def get_all_eleves(user_id):
