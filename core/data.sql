@@ -1,18 +1,21 @@
--- database: c:\Users\adrie\Desktop\maman\core\ma_base.db
+-- database: c:\Users\adrie\Desktop\code\maman\core\ma_base.db
 
 -- database: /path/to/database.db
 -- ================================
 -- INSERTION DES CLASSES
 -- ================================
-INSERT INTO classes (id, name, user_id) VALUES
-(1, '6ème A', 1),
-(2, '6ème B', 1),
-(3, '5ème A', 1),
-(4, '5ème B', 1),
-(5, '4ème A', 1),
-(6, '4ème B', 1),
-(7, '3ème A', 1),
-(8, '3ème B', 1);
+INSERT INTO classes (id, name, user_id, annee_id) VALUES
+(1, '6ème A', 1, 1),
+(2, '6ème B', 1, 1),
+(3, '5ème A', 1, 1),
+(4, '5ème B', 1, 1),
+(5, '4ème A', 1, 1),
+(6, '4ème B', 1, 1),
+(7, '3ème A', 1, 1),
+(8, '3ème B', 1, 1);
+
+INSERT INTO anee_scolaire(id, annee, debut, fin, is_active) VALUES
+('1', '2024', '01/09/2023', '05/07/2024', False);
 
 -- ================================
 -- INSERTION DES ÉLÈVES (20 par classe)

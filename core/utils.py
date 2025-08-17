@@ -1,4 +1,4 @@
-from models import Proffesseurs_Users, Eleves, Classes
+from models import Proffesseurs_Users, Eleves, Classes, Anee_scolaire
 from peewee import SqliteDatabase
 import hashlib
 
@@ -6,7 +6,7 @@ import hashlib
 def create_tables():
     db = SqliteDatabase("ma_base.db")
     db.connect()
-    db.create_tables([Proffesseurs_Users, Eleves, Classes], safe=True)
+    db.create_tables([Proffesseurs_Users, Eleves, Classes, Anee_scolaire], safe=True)
     db.close()
 
 

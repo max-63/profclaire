@@ -23,13 +23,20 @@ class Proffesseurs_Users(BaseModel):
     is_admin = BooleanField(default=False)
 
 
+class Anee_scolaire(BaseModel):
+    annee = CharField(unique=True)
+    debut = CharField()
+    fin = CharField()
+    is_active = BooleanField(default=False)
+
+
 class Classes(BaseModel):
     name = CharField()
     user = ForeignKeyField(Proffesseurs_Users, backref="classes")
+    annee = ForeignKeyField(Anee_scolaire, backref="classes")
 
 
 class Eleves(BaseModel):
-
     first_name = CharField()
     last_name = CharField()
     classe = ForeignKeyField(Classes, backref="eleves")
