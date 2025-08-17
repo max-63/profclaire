@@ -133,22 +133,43 @@ export class Dashboard implements OnInit {
 
 
 
-  // Retourne les lignes de cartes ouvertes
-  getOpenLines() {
+  // Ligne à mettre dans la classe Dashboard
+  getOpenLines(): any[][] {
     const openCards = this.classesAvecEleves.filter(c => c.isOpen);
     const lines: any[][] = [];
-    const maxPerLine = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+    let i = 0;
 
-    for (let i = 0; i < openCards.length; i += maxPerLine) {
-      lines.push(openCards.slice(i, i + maxPerLine));
+    while (i < openCards.length) {
+      // Alterne 2 ou 3 cartes par ligne : 50% ou 33%
+      const cardsInLine = (lines.length % 2 === 0) ? 2 : 3;
+      lines.push(openCards.slice(i, i + cardsInLine));
+      i += cardsInLine;
     }
+
     return lines;
   }
+
+  // Calcul de la largeur par carte selon la ligne
+  getOpenCardStyleByLine(lineIndex: number, lineLength: number) {
+    if (window.innerWidth >= 1024) { // Desktop
+      const width = (lineLength === 2) ? '50%' : '33%';
+      return { flex: `1 1 ${width}` };
+    }
+    if (window.innerWidth >= 768) { // Tablette
+      const width = (lineLength >= 2) ? '48%' : '100%';
+      return { flex: `1 1 ${width}` };
+    }
+    return { flex: '1 1 100%' }; // Mobile
+  }
+
 
   // Retourne les cartes fermées (toujours en bas)
   getClosedCards() {
     return this.classesAvecEleves.filter(c => !c.isOpen);
   }
+
+
+  
 
 
 
