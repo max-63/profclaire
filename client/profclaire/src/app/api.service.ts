@@ -17,8 +17,8 @@ export interface Eleve {
   id: number;
   first_name: string;
   last_name: string;
-  email: string;
-  class_id: number;
+  classe: number;
+  photo: string;
 }
 
 export interface Classe {

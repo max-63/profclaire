@@ -1,10 +1,18 @@
-from peewee import Model, CharField, DateTimeField, ForeignKeyField, TextField, IntegerField, BooleanField, DecimalField, BlobField, DateField, TimeField, FloatField, UUIDField, BigIntegerField, SqliteDatabase
+from peewee import (
+    Model,
+    CharField,
+    ForeignKeyField,
+    BooleanField,
+    SqliteDatabase,
+)
 
-db = SqliteDatabase('ma_base.db')
+db = SqliteDatabase("ma_base.db")
+
 
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class Proffesseurs_Users(BaseModel):
     username = CharField(unique=True)
@@ -17,13 +25,12 @@ class Proffesseurs_Users(BaseModel):
 
 class Classes(BaseModel):
     name = CharField()
-    user = ForeignKeyField(Proffesseurs_Users, backref='classes')
+    user = ForeignKeyField(Proffesseurs_Users, backref="classes")
 
 
 class Eleves(BaseModel):
 
     first_name = CharField()
     last_name = CharField()
-    email = CharField()
-    classe = ForeignKeyField(Classes, backref='eleves')
-    
+    classe = ForeignKeyField(Classes, backref="eleves")
+    photo = CharField(null=True)

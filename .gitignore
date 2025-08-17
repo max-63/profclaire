@@ -1,3 +1,8 @@
 client/profclaire/node_modules
 client/profclaire/.vscode
 client/profclaire/.angular/**
+core/.venv
+core/__pycache__
+core/__pycache__/** 
+core/ma_base.db
+core/.ruff_cache

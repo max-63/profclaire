@@ -1,17 +1,17 @@
 from models import Proffesseurs_Users, Eleves, Classes
-from peewee import *
-import json
+from peewee import SqliteDatabase
 import hashlib
 
+
 def create_tables():
-    db = SqliteDatabase('ma_base.db')
+    db = SqliteDatabase("ma_base.db")
     db.connect()
     db.create_tables([Proffesseurs_Users, Eleves, Classes], safe=True)
     db.close()
 
 
 def connect_user(username, password):
-    db = SqliteDatabase('ma_base.db')
+    db = SqliteDatabase("ma_base.db")
     db.connect()
     try:
         user = Proffesseurs_Users.get(Proffesseurs_Users.username == username)
@@ -22,7 +22,7 @@ def connect_user(username, password):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "is_admin": user.is_admin
+                "is_admin": user.is_admin,
             }
         return None
     except Proffesseurs_Users.DoesNotExist:
@@ -37,12 +37,19 @@ def hash_some_string(string):
 
 
 def create_user(username, password, last_name, first_name, email, is_admin=False):
-    db = SqliteDatabase('ma_base.db')
+    db = SqliteDatabase("ma_base.db")
     db.connect()
     password = hash_some_string(password)
     try:
         # Vérifier si l'utilisateur existe déjà
-        if Proffesseurs_Users.select().where((Proffesseurs_Users.username == username) | (Proffesseurs_Users.email == email)).exists():
+        if (
+            Proffesseurs_Users.select()
+            .where(
+                (Proffesseurs_Users.username == username)
+                | (Proffesseurs_Users.email == email)
+            )
+            .exists()
+        ):
             return {"error": "User or email already exists"}
 
         user = Proffesseurs_Users.create(
@@ -51,42 +58,56 @@ def create_user(username, password, last_name, first_name, email, is_admin=False
             email=email,
             first_name=first_name,
             last_name=last_name,
-            is_admin=is_admin
+            is_admin=is_admin,
         )
-        return {"id": user.id, "nom": user.last_name, "email": user.email} # Retourne un JSON
+        return {
+            "id": user.id,
+            "nom": user.last_name,
+            "email": user.email,
+        }  # Retourne un JSON
     except Exception as e:
         return {"error": str(e)}
     finally:
         db.close()
 
 
-
 def get_all_eleves(user_id):
-    db = SqliteDatabase('ma_base.db')
+    db = SqliteDatabase("ma_base.db")
     db.connect()
-    
-    professeur = Proffesseurs_Users.get(Proffesseurs_Users.id == user_id)
-    
-    # Récupérer les élèves liés à ce professeur
-    eleves = Eleves.select().where(Eleves.user == professeur)
-    eleve_list = [{"id": e.id, "first_name": e.first_name, "last_name": e.last_name, "email": e.email, "class_id": e.class_id} for e in eleves]
-    
-    db.close()
-    
-    return json.dumps(eleve_list, ensure_ascii=False)  # Retourne un JSON
+
+    try:
+        professeur = Proffesseurs_Users.get(Proffesseurs_Users.id == user_id)
+
+        # Récupérer les élèves liés aux classes de ce professeur
+        eleves = Eleves.select().join(Classes).where(Classes.user == professeur)
+
+        eleve_list = [
+            {
+                "id": e.id,
+                "first_name": e.first_name,
+                "last_name": e.last_name,
+                "classe": e.classe.id,  # attention, c'est "classe" et pas "class_id"
+                "photo": e.photo,
+            }
+            for e in eleves
+        ]
+
+        return eleve_list
+
+    finally:
+        db.close()
+
 
 def get_all_classes(user_id):
-    db = SqliteDatabase('ma_base.db')
+    db = SqliteDatabase("ma_base.db")
     db.connect()
-    
-    professeur = Proffesseurs_Users.get(Proffesseurs_Users.id == user_id)
 
+    try:
+        professeur = Proffesseurs_Users.get(Proffesseurs_Users.id == user_id)
 
-    classes = Classes.select().where(Classes.user == professeur)
-    class_list = [{"id": c.id, "name": c.name} for c in classes]
+        classes = Classes.select().where(Classes.user == professeur)
+        class_list = [{"id": c.id, "name": c.name} for c in classes]
 
-    
-    db.close()
-    
-    return json.dumps(class_list, ensure_ascii=False)  # Retourne un JSON
-
+        return class_list
+    finally:
+        db.close()

@@ -1,0 +1,23 @@
+<p>dashboard works!</p>
+<div *ngFor="let c of classesAvecEleves" class="classe-table">
+  <!-- Header de la classe -->
+  <h2>{{ c.classe.name }}</h2>
+
+  <!-- Tableau des élèves -->
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Prénom</th>
+        <th>Nom</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let e of c.eleves">
+        <td><img [src]="e.photo" alt="{{ e.first_name }}" width="50"></td>
+        <td>{{ e.first_name }}</td>
+        <td>{{ e.last_name }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,9 +1,15 @@
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Request, HTTPException, Depends, Header
+from fastapi import Body, FastAPI, Request, HTTPException, Depends, Header
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import jwt
-from utils import create_tables, get_all_eleves, get_all_classes, create_user, connect_user
+from utils import (
+    create_tables,
+    get_all_eleves,
+    get_all_classes,
+    create_user,
+    connect_user,
+)
 
 # ⚠️ Mettre en .env en prod
 JWT_SECRET = "MaSuperCleSecrete123"
@@ -16,14 +22,13 @@ app = FastAPI()
 # Middleware CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # <- ça devrait autoriser toutes les origines
+    allow_origins=["*"],  # autorise toutes les origines pour dev
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
-
-create_tables()  # Tables à l'initialisation
+create_tables()  # Crée les tables à l'initialisation
 
 
 # --- JWT utils ---
@@ -42,11 +47,19 @@ def verify_jwt(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
+# --- Auth dependency ---
+def get_current_user(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth header")
+    token = authorization.split(" ")[1]
+    user_id = verify_jwt(token)
+    return user_id
+
+
 # --- Endpoints ---
 @app.post("/api/register")
 async def register_user(request: Request):
     data = await request.json()
-    print("Register payload:", data)
     username = data.get("username")
     password = data.get("password")
     last_name = data.get("last_name")
@@ -57,53 +70,57 @@ async def register_user(request: Request):
         raise HTTPException(status_code=400, detail="Missing fields")
 
     user = create_user(username, password, last_name, first_name, email, is_admin=False)
-    if not user:
-        raise HTTPException(status_code=400, detail="User already exists or invalid data")
+    if "error" in user:
+        raise HTTPException(status_code=400, detail=user["error"])
 
     return JSONResponse(content=user)
 
 
 @app.post("/api/login")
 async def login_user(request: Request):
-    try:
-        data = await request.json()
-        username = data.get("username")
-        password = data.get("password")
+    data = await request.json()
+    username = data.get("username")
+    password = data.get("password")
 
-        user = connect_user(username, password)
-        if not user:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+    user = connect_user(username, password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        access_token = create_jwt(user["id"], timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        refresh_token = create_jwt(user["id"], timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
+    access_token = create_jwt(
+        user["id"], timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    refresh_token = create_jwt(user["id"], timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
-        return JSONResponse(content={
+    return JSONResponse(
+        content={
             "user": user,
             "access_token": access_token,
-            "refresh_token": refresh_token
-        })
-    except Exception as e:
-        print("ERROR LOGIN:", e)
-        raise HTTPException(status_code=500, detail=str(e))
+            "refresh_token": refresh_token,
+        }
+    )
 
 
+@app.post("/api/token/refresh")
+async def refresh_token_endpoint(data: dict = Body(...)):
+    refresh_token = data.get("refresh")
+    if not refresh_token:
+        raise HTTPException(status_code=400, detail="Missing refresh token")
 
-# --- Auth dependency ---
-def get_current_user(authorization: str = Header(...)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid auth header")
-    token = authorization.split(" ")[1]
-    user_id = verify_jwt(token)
-    return user_id
+    user_id = verify_jwt(refresh_token)
+    new_access_token = create_jwt(
+        user_id, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return JSONResponse(content={"access": new_access_token})
 
 
+# --- Endpoints protégés ---
 @app.get("/api/eleves")
 async def list_eleves(user_id: int = Depends(get_current_user)):
-    eleves = get_all_eleves()
-    return JSONResponse(content=eleves)
+    eleves = get_all_eleves(user_id)
+    return eleves
 
 
 @app.get("/api/classes")
 async def list_classes(user_id: int = Depends(get_current_user)):
-    classes = get_all_classes()
-    return JSONResponse(content=classes)
+    classes = get_all_classes(user_id)
+    return classes
