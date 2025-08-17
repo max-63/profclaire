@@ -66,6 +66,90 @@ export class Dashboard implements OnInit {
       this.classesAvecEleves = this.trier_eleves_par_classes();
     }
   }
+  
+
+
+  getOpenFlex(c: any): string {
+    const openCount = this.classesAvecEleves.filter(c => c.isOpen).length;
+
+    // Largeur variable selon le nombre de cartes ouvertes
+    if (window.innerWidth >= 1024) { // lg
+      if (openCount === 1) return '1 1 100%';
+      if (openCount === 2) return '1 1 48%';
+      if (openCount === 3) return '1 1 32%';
+      return '1 1 32%';
+    }
+
+    if (window.innerWidth >= 768) return '1 1 48%'; // md
+    return '1 1 100%'; // sm
+  }
+
+
+  // Trie pour avoir les cartes ouvertes en premier
+  sortedClasses() {
+    return [...this.classesAvecEleves].sort((a, b) => (b.isOpen ? 1 : 0) - (a.isOpen ? 1 : 0));
+  }
+
+  // Détermine le style (largeur responsive) selon les cartes ouvertes sur la ligne
+  getCardStyle(c: any) {
+    if (!c.isOpen) return { flex: '1 1 30%', height: '150px' };
+
+    const openCards = this.classesAvecEleves.filter(cl => cl.isOpen);
+    const count = openCards.length;
+
+    if (window.innerWidth >= 1024) return { flex: `1 1 ${100 / Math.min(count,3) - 2}%` };
+    if (window.innerWidth >= 768) return { flex: `1 1 ${100 / Math.min(count,2) - 2}%` };
+    return { flex: '1 1 100%' };
+  }
+
+
+  // Détermine quelles cartes sont sur la même "ligne" (approximatif selon flex-wrap)
+  getCardsInLine(index: number) {
+    const line: any[] = [];
+    const breakpoint = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+
+    const start = Math.floor(index / breakpoint) * breakpoint;
+    for (let i = start; i < start + breakpoint && i < this.classesAvecEleves.length; i++) {
+      line.push(this.classesAvecEleves[i]);
+    }
+    return line;
+  }
+
+
+  getOpenCardStyle(index: number) {
+    const openCards = this.classesAvecEleves.filter(c => c.isOpen);
+    const count = openCards.length;
+
+    // Responsive
+    if (window.innerWidth >= 1024) { // lg
+      return { flex: `1 1 ${100 / Math.min(count,3) - 2}%` };
+    }
+    if (window.innerWidth >= 768) { // md
+      return { flex: `1 1 ${100 / Math.min(count,2) - 2}%` };
+    }
+    return { flex: '1 1 100%' };
+  }
+
+
+
+
+  // Retourne les lignes de cartes ouvertes
+  getOpenLines() {
+    const openCards = this.classesAvecEleves.filter(c => c.isOpen);
+    const lines: any[][] = [];
+    const maxPerLine = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+
+    for (let i = 0; i < openCards.length; i += maxPerLine) {
+      lines.push(openCards.slice(i, i + maxPerLine));
+    }
+    return lines;
+  }
+
+  // Retourne les cartes fermées (toujours en bas)
+  getClosedCards() {
+    return this.classesAvecEleves.filter(c => !c.isOpen);
+  }
+
 
 
 }

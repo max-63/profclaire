@@ -1,23 +1,62 @@
-<p>dashboard works!</p>
-<div *ngFor="let c of classesAvecEleves" class="classe-table">
-  <!-- Header de la classe -->
-  <h2>{{ c.classe.name }}</h2>
+<div class="flex flex-wrap gap-6">
 
-  <!-- Tableau des élèves -->
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Photo</th>
-        <th>Prénom</th>
-        <th>Nom</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let e of c.eleves">
-        <td><img [src]="e.photo" alt="{{ e.first_name }}" width="50"></td>
-        <td>{{ e.first_name }}</td>
-        <td>{{ e.last_name }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- Cartes ouvertes regroupées par ligne -->
+  <ng-container *ngFor="let line of getOpenLines()">
+    <div class="flex w-full gap-6">
+      <div *ngFor="let c of line" 
+           class="classe-table bg-white shadow-md rounded-lg overflow-hidden transition-all duration-500 flex-1"
+           [ngStyle]="{ flex: '1 1 ' + (100 / line.length) + '%' }">
+
+        <!-- Header -->
+        <div class="bg-blue-600 text-white px-4 py-2 flex justify-between items-center cursor-pointer 
+                    hover:bg-blue-700 transition-colors"
+             (click)="c.isOpen = !c.isOpen">
+          <h2 class="text-lg font-semibold truncate">{{ c.classe.name }}</h2>
+          <div class="bg-white/20 rounded-full p-1">
+            <svg class="w-5 h-5 transform transition-transform duration-300"
+                 [ngClass]="{ 'rotate-180': c.isOpen }"
+                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div *ngIf="c.isOpen" class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div *ngFor="let e of c.eleves" 
+               class="eleve-card flex items-center p-3 border rounded-lg hover:bg-gray-50 transition duration-300">
+            <img [src]="e.photo" alt="{{ e.first_name }}" 
+                 class="eleve-photo w-12 h-12 rounded-full object-cover mr-4 transition-transform duration-300">
+            <div>
+              <p class="font-semibold text-gray-800">{{ e.first_name }}</p>
+              <p class="text-gray-600 text-sm">{{ e.last_name }}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Cartes fermées -->
+  <div class="flex w-full flex-wrap gap-6">
+    <div *ngFor="let c of getClosedCards()"
+         class="classe-table bg-white shadow-md rounded-lg overflow-hidden transition-all duration-500 flex-1"
+         style="flex: 1 1 30%; height:150px;">
+      
+      <!-- Header seulement -->
+      <div class="bg-blue-600 text-white px-4 py-2 flex justify-between items-center cursor-pointer 
+                  hover:bg-blue-700 transition-colors"
+           (click)="c.isOpen = !c.isOpen">
+        <h2 class="text-lg font-semibold truncate">{{ c.classe.name }}</h2>
+        <div class="bg-white/20 rounded-full p-1">
+          <svg class="w-5 h-5 transform transition-transform duration-300"
+               fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

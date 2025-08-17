@@ -98,6 +98,11 @@
       }
     }
   },
+  "schematics": {
+    "@schematics/angular:component": {
+      "style": "css"
+    }
+  },
   "cli": {
     "schematicCollections": [
       "angular-eslint"
